@@ -1,0 +1,28 @@
+{
+  "rules": {
+    "cadena_frio": {
+      ".read": "auth != null",
+      "usuarios": {
+        "$uid": {
+          ".read": "auth != null && auth.uid == $uid",
+          ".write": "auth != null && auth.uid == $uid",
+          ".validate": "newData.hasChildren(['email', 'rol', 'actualizadoEn']) && (newData.child('rol').val() == 'SUPERVISOR' || newData.child('rol').val() == 'OPERADOR' || newData.child('rol').val() == 'TECNICO_IOT')"
+        }
+      },
+      "actual": {
+        ".write": "auth != null && (root.child('cadena_frio/usuarios/' + auth.uid + '/rol').val() == 'SUPERVISOR' || root.child('cadena_frio/usuarios/' + auth.uid + '/rol').val() == 'TECNICO_IOT')",
+        ".validate": "newData.hasChildren(['temperatura', 'puertaAbierta', 'estado', 'timestamp', 'firmaIntegridad']) && newData.child('temperatura').isNumber() && newData.child('temperatura').val() >= -40 && newData.child('temperatura').val() <= 125",
+        "comandoActivo": {
+          ".write": "auth != null && ((newData.val() == 'CMD:SILENCIO' && root.child('cadena_frio/usuarios/' + auth.uid + '/rol').val() == 'SUPERVISOR') || ((newData.val() == 'CMD:AUTO' || newData.val() == 'CMD:TEST') && (root.child('cadena_frio/usuarios/' + auth.uid + '/rol').val() == 'SUPERVISOR' || root.child('cadena_frio/usuarios/' + auth.uid + '/rol').val() == 'TECNICO_IOT')))",
+          ".validate": "newData.isString() && (newData.val() == 'CMD:SILENCIO' || newData.val() == 'CMD:AUTO' || newData.val() == 'CMD:TEST' || newData.val() == 'AUTO')"
+        }
+      },
+      "historial": {
+        "$eventoId": {
+          ".write": "auth != null && !data.exists() && (root.child('cadena_frio/usuarios/' + auth.uid + '/rol').val() == 'SUPERVISOR' || root.child('cadena_frio/usuarios/' + auth.uid + '/rol').val() == 'TECNICO_IOT')",
+          ".validate": "newData.hasChildren(['temperatura', 'puertaAbierta', 'estado', 'origen', 'timestamp']) && newData.child('temperatura').isNumber() && newData.child('temperatura').val() >= -40 && newData.child('temperatura').val() <= 125"
+        }
+      }
+    }
+  }
+}
